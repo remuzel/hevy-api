@@ -34,8 +34,6 @@ class Exercise(BaseModel):
     @property
     def summary(self):
         summary = self.model_dump(include={"title", "notes"}, exclude_none=True)
-        if len(summary["notes"]) == 0:
-            del summary["notes"]
         summary["sets"] = [set.summary for set in self.sets]
         return summary
 
