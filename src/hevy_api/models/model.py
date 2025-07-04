@@ -26,7 +26,7 @@ class Set(BaseModel):
 class Exercise(BaseModel):
     index: int
     title: str
-    notes: str
+    notes: Optional[str] = None
     exercise_template_id: str
     supersets_id: Optional[int] = None
     sets: list[Set]
