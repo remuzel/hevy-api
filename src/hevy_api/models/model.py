@@ -56,7 +56,9 @@ class Workout(BaseModel):
 
     @property
     def summary(self):
-        summary = self.model_dump(include={"title", "description"}, exclude_none=True)
+        summary = self.model_dump(
+            include={"id", "title", "description"}, exclude_none=True
+        )
         if len(summary["description"]) == 0:
             del summary["description"]
         summary["duration"] = str(self.duration)
@@ -71,3 +73,9 @@ class Routine(BaseModel):
     updated_at: datetime
     created_at: datetime
     exercises: list[Exercise]
+
+    @property
+    def summary(self):
+        summary = self.model_dump(include={"id", "title"}, exclude_none=True)
+        summary["exercises"] = [exercise.summary for exercise in self.exercises]
+        return summary
