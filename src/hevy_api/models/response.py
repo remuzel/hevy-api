@@ -74,9 +74,9 @@ class RoutineResponse(BaseResponse):
         # Only create Routine model if response is successful and data is valid
         if self.is_success and data:
             try:
-                self.workout: Optional[Routine] = Routine(**data)
+                self.routine: Optional[Routine] = Routine(**data)
             except Exception as e:
                 print("Failed to serialize RoutineResponse: ", e)
-                self.workout = None
+                self.routine = None
         else:
-            self.workout = None
+            self.routine = None
