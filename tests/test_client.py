@@ -5,8 +5,12 @@ import requests
 
 from hevy_api.client import HevyClient, HTTPClient
 from hevy_api.models.base import BaseRequest, BaseResponse
+from hevy_api.models.model import WorkoutCount
 from hevy_api.models.request import GetWorkoutRequest
-from hevy_api.models.response import WorkoutResponse
+from hevy_api.models.response import (
+    WorkoutCountResponse,
+    WorkoutResponse,
+)
 
 
 @pytest.fixture
@@ -56,13 +60,13 @@ def assert_response_matches(
         assert response.headers == expected_headers
 
 
-def assert_required_headers_present(headers, remember_token="test_token"):
+def assert_required_headers_present(headers, api_key="test_token"):
     """Helper function to verify required headers are present."""
     required_headers = {
         "User-Agent": "HevyClient/1.0",
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Cookie": f"remember_token={remember_token}",
+        "api-key": api_key,
     }
 
     for key, value in required_headers.items():
@@ -86,10 +90,7 @@ class TestHTTPClient:
 
     def test_init_sets_attributes_and_headers(self, http_client):
         """Test that HTTPClient sets all attributes and headers correctly."""
-        assert http_client.remember_token == "test_token"
         assert isinstance(http_client.session, requests.Session)
-
-        # Verify required headers
         assert_required_headers_present(http_client.session.headers)
 
     @patch("requests.Session.request")
@@ -160,19 +161,28 @@ class TestHTTPClient:
         assert headers["User-Agent"] == "HevyClient/1.0"
         assert headers["Accept"] == "application/xml"  # Overridden by request
         assert headers["Content-Type"] == "application/json"
-        assert headers["Cookie"] == "remember_token=test_token"
+        assert headers["api-key"] == "test_token"
         assert headers["Custom-Header"] == "custom-value"
+
+
+@pytest.fixture
+def mock_workout_count_response():
+    mock_response = Mock(spec=WorkoutCountResponse)
+    mock_response.workout_count = WorkoutCount(workout_count=42)
+    mock_response.data = mock_response.workout_count.model_dump_json()
+    mock_response.status_code = 200
+    mock_response.headers = {"Content-Type": "text/plain"}
+    return mock_response
 
 
 class TestHevyClient:
     """Test cases for HevyClient class."""
 
     def test_init_with_remember_token(self):
-        """Test HevyClient initialization with provided remember_token."""
-        client = HevyClient(remember_token="test_token")
+        """Test HevyClient initialization with provided api_key."""
+        client = HevyClient(api_key="test_token")
         assert isinstance(client.http_client, HTTPClient)
-        assert client.http_client.remember_token == "test_token"
-        assert client.http_client.base_url == "https://api.polarsteps.com"
+        assert client.http_client.base_url == "https://api.hevyapp.com"
 
     @pytest.mark.parametrize(
         "env_value,should_raise",
@@ -193,11 +203,14 @@ class TestHevyClient:
             monkeypatch.delenv("HEVY_API_KEY", raising=False)
 
         if should_raise:
-            with pytest.raises(ValueError, match="Remember token must be provided"):
+            with pytest.raises(
+                ValueError,
+                match="api-key must be provided either directly or via configuration",
+            ):
                 HevyClient()
         else:
             client = HevyClient()
-            assert client.http_client.remember_token == env_value
+            assert client.http_client.session.headers["api-key"] == env_value
 
         mock_load_dotenv.assert_called_once()
 
@@ -206,14 +219,14 @@ class TestHevyClient:
         """Test HevyClient initialization with None token loads from environment."""
         monkeypatch.setenv("HEVY_API_KEY", "env_token")
 
-        client = HevyClient(remember_token=None)
-        assert client.http_client.remember_token == "env_token"
+        client = HevyClient(api_key=None)
+        assert client.http_client.session.headers["api-key"] == "env_token"
         mock_load_dotenv.assert_called_once()
 
     @pytest.mark.parametrize(
         "method_name,request_class,response_class,test_id",
         [
-            ("get_workout", GetWorkoutRequest, WorkoutResponse, "trip123"),
+            ("get_workout", GetWorkoutRequest, WorkoutResponse, "workout-123"),
         ],
     )
     @patch("hevy_api.client.HTTPClient")
@@ -237,7 +250,7 @@ class TestHevyClient:
         mock_http_client_class.return_value = mock_http_client
 
         # Create client and call method
-        client = HevyClient(remember_token="test_token")
+        client = HevyClient(api_key="test_token")
         method = getattr(client, method_name)
         result = method(test_id)
 
@@ -255,16 +268,34 @@ class TestHevyClient:
     def test_class_attributes(self):
         """Test that class attributes are set correctly."""
         assert HevyClient.env_token == "HEVY_API_KEY"
-        assert HevyClient.base_url == "https://api.polarsteps.com"
+        assert HevyClient.base_url == "https://api.hevyapp.com"
 
 
-class TestIntegration:
-    """Integration test for complete client flow."""
-
+class TestHevyAPIs:
     @pytest.mark.parametrize(
         "method_name,test_id,expected_endpoint",
         [
-            ("get_workout", "trip123", "https://api.polarsteps.com/trips/trip123"),
+            ("get_workout_count", "", "https://api.hevyapp.com/v1/workouts/count"),
+            (
+                "get_workout",
+                "workout-123",
+                "https://api.hevyapp.com/v1/workouts/workout-123",
+            ),
+            (
+                "get_routine",
+                "routine-123",
+                "https://api.hevyapp.com/v1/routines/routine-123",
+            ),
+            (
+                "get_workouts",
+                "",
+                "https://api.hevyapp.com/v1/workouts?page=1&pageSize=5",
+            ),
+            (
+                "get_routines",
+                "",
+                "https://api.hevyapp.com/v1/routines?page=1&pageSize=5",
+            ),
         ],
     )
     @patch("requests.Session.request")
@@ -284,9 +315,9 @@ class TestIntegration:
         mock_request.return_value = mock_response
 
         # Create client and make request
-        client = HevyClient(remember_token="test_token")
+        client = HevyClient(api_key="test_token")
         method = getattr(client, method_name)
-        result = method(test_id)
+        result = method(test_id) if len(test_id) > 0 else method()
 
         # Verify the complete flow
         expected_data = {
@@ -301,8 +332,6 @@ class TestIntegration:
         call_args = mock_request.call_args
         assert call_args[1]["method"] == "GET"
         assert call_args[1]["url"] == expected_endpoint
-
-        # Check that required headers are present
         assert_required_headers_present(call_args[1]["headers"])
 
     @patch("requests.Session.request")
@@ -310,8 +339,8 @@ class TestIntegration:
         """Test error handling throughout the complete flow."""
         mock_request.side_effect = requests.ConnectionError("Network error")
 
-        client = HevyClient(remember_token="test_token")
-        result = client.get_workout("trip123")
+        client = HevyClient(api_key="test_token")
+        result = client.get_workout("workout-123")
 
         # Verify error is handled properly
         assert isinstance(result, WorkoutResponse)
