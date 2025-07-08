@@ -8,6 +8,15 @@ class WorkoutCount(BaseModel):
     workout_count: int
 
 
+class ExerciseTemplate(BaseModel):
+    id: str
+    title: str
+    type: str
+    primary_muscle_group: str
+    secondary_muscle_groups: list[str]
+    is_custom: bool = False
+
+
 class Set(BaseModel):
     index: int
     type: str

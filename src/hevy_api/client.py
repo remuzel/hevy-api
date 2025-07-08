@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from hevy_api.models.base import BaseRequest, BaseResponse
 from hevy_api.models.model import Routine, Workout
 from hevy_api.models.request import (
+    GetExerciseTemplate,
+    GetExerciseTemplates,
     GetRoutineRequest,
     GetRoutinesRequest,
     GetWorkoutRequest,
@@ -19,6 +21,8 @@ from hevy_api.models.request import (
     PutWorkoutRequest,
 )
 from hevy_api.models.response import (
+    ExerciseTemplateResponse,
+    ExerciseTemplatesResponse,
     RoutineResponse,
     RoutinesResponse,
     WorkoutCountResponse,
@@ -127,6 +131,59 @@ class HevyClient:
             self._cache[cache_key] = workouts_count
 
         return workouts_count
+
+    def get_exercise_templates(
+        self, page_number: int = 1, page_size: int = 5
+    ) -> ExerciseTemplatesResponse:
+        # Check the cache first
+        cache_key = f"{ExerciseTemplatesResponse.__name__}:{page_number}:{page_size}"
+        cached_response = self._cache.get(cache_key)
+        if cached_response is not None and isinstance(
+            cached_response, ExerciseTemplatesResponse
+        ):
+            return cached_response
+
+        # Cache miss - make the API call
+        request = GetExerciseTemplates(page_number, page_size)
+        response = self.http_client.execute(request)
+
+        exercise_templates = ExerciseTemplatesResponse(
+            data=response.data,
+            status_code=response.status_code,
+            headers=response.headers,
+        )
+
+        # Avoid caching error responses
+        if exercise_templates.is_success:
+            self._cache[cache_key] = exercise_templates
+
+        return exercise_templates
+
+    def get_exercise_template(
+        self, exercise_template_id: str
+    ) -> ExerciseTemplateResponse:
+        # Check the cache first
+        cached_response = self._cache.get(exercise_template_id)
+        if cached_response is not None and isinstance(
+            cached_response, ExerciseTemplateResponse
+        ):
+            return cached_response
+
+        # Cache miss - make the API call
+        request = GetExerciseTemplate(exercise_template_id)
+        response = self.http_client.execute(request)
+
+        exercise_template = ExerciseTemplateResponse(
+            data=response.data,
+            status_code=response.status_code,
+            headers=response.headers,
+        )
+
+        # Avoid caching error responses
+        if exercise_template.is_success:
+            self._cache[exercise_template_id] = exercise_template
+
+        return exercise_template
 
     def get_workout(self, workout_id: str) -> WorkoutResponse:
         # Check the cache first

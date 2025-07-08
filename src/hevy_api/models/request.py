@@ -15,6 +15,33 @@ class GetWorkoutsCountRequest(BaseRequest):
         return "GET"
 
 
+class GetExerciseTemplates(BaseRequest):
+    def __init__(self, page_number: int, page_size: int, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.page_number = page_number
+        self.page_size = page_size
+
+    def get_endpoint(self) -> str:
+        return (
+            f"/v1/exercise_templates?page={self.page_number}&pageSize={self.page_size}"
+        )
+
+    def get_method(self) -> str:
+        return "GET"
+
+
+class GetExerciseTemplate(BaseRequest):
+    def __init__(self, exercise_id: str, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.exercise_id = exercise_id
+
+    def get_endpoint(self) -> str:
+        return f"/v1/exercise_templates/{self.exercise_id}"
+
+    def get_method(self) -> str:
+        return "GET"
+
+
 class GetWorkoutsRequest(BaseRequest):
     def __init__(self, page_number: int, page_size: int, **kwargs: Any) -> None:
         super().__init__(**kwargs)

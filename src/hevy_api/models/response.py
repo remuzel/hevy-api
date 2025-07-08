@@ -1,7 +1,7 @@
 from typing import Any, Optional
 
 from hevy_api.models.base import BaseResponse
-from hevy_api.models.model import Routine, Workout, WorkoutCount
+from hevy_api.models.model import ExerciseTemplate, Routine, Workout, WorkoutCount
 
 
 class WorkoutCountResponse(BaseResponse):
@@ -16,6 +16,40 @@ class WorkoutCountResponse(BaseResponse):
                 self.workout_count = None
         else:
             self.workout_count = None
+
+
+class ExerciseTemplateResponse(BaseResponse):
+    def __init__(self, data: Any, status_code: int, headers: dict[str, str]) -> None:
+        super().__init__(data, status_code, headers)
+        # Only create WorkoutCount model if response is successful and data is valid
+        if self.is_success and data:
+            try:
+                self.exercise_template: Optional[ExerciseTemplate] = ExerciseTemplate(
+                    **data
+                )
+            except Exception as e:
+                print("Failed to serialize ExerciseTemplateResponse: ", e)
+                self.exercise_template = None
+        else:
+            self.exercise_template = None
+
+
+class ExerciseTemplatesResponse(BaseResponse):
+    def __init__(self, data: Any, status_code: int, headers: dict[str, str]) -> None:
+        super().__init__(data, status_code, headers)
+        if self.is_success and data:
+            try:
+                self.page: int = data["page"]
+                self.page_count: int = data["page_count"]
+                self.exercise_templates: list[ExerciseTemplate] = [
+                    ExerciseTemplate(**exercise_template)
+                    for exercise_template in data["exercise_templates"]
+                ]
+            except Exception as e:
+                print("Failed to serialize ExerciseTemplatesResponse: ", e)
+                self.exercise_templates = []
+        else:
+            self.exercise_templates = []
 
 
 class WorkoutsResponse(BaseResponse):
