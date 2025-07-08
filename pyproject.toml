@@ -24,6 +24,24 @@ dev = [
     "ruff>=0.12.0",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+
+[tool.coverage.run]
+source = ["src/hevy_api"]
+omit = ["src/hevy_api/models/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError"
+]
+
 [tool.ruff]
 target-version = "py310"
 line-length = 88
