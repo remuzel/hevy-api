@@ -5,6 +5,8 @@ description = "Unofficial Python client for Hevy workout data API"
 readme = "README.md"
 authors = [{name = "Remi Uzel"}]
 requires-python = ">=3.10"
+keywords = ["hevy", "python", "workouts", "gym", "api", "wrapper"]
+license = {file = "LICENSE.md"}
 dependencies = [
     "cachetools>=6.1.0",
     "pydantic>=2.11.7",

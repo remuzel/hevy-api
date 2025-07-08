@@ -15,7 +15,7 @@ def main():
         exit("Could not find workouts...")
     print(n_workouts.model_dump(exclude_none=True, exclude_unset=True))
 
-    last_workout: Workout | None = (client.get_workouts().workouts or [])[-1]
+    last_workout: Workout | None = (client.get_workouts().workouts or [None])[-1]
     if last_workout is None:
         exit("Could not find workouts.")
     print(last_workout.summary)
