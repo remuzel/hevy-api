@@ -5,6 +5,8 @@ from .request import (
     GetWorkoutRequest,
     GetWorkoutsCountRequest,
     GetWorkoutsRequest,
+    PutRoutineRequest,
+    PutWorkoutRequest,
 )
 from .response import (
     RoutineResponse,
@@ -18,9 +20,11 @@ __all__ = [
     # Requests
     "GetRoutineRequest",
     "GetRoutinesRequest",
+    "PutRoutineRequest",
     "GetWorkoutRequest",
     "GetWorkoutsCountRequest",
     "GetWorkoutsRequest",
+    "PutWorkoutRequest",
     # Responses
     "RoutineResponse",
     "RoutinesResponse",

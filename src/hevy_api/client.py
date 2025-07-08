@@ -6,12 +6,17 @@ from cachetools import TTLCache
 from dotenv import load_dotenv
 
 from hevy_api.models.base import BaseRequest, BaseResponse
+from hevy_api.models.model import Routine, Workout
 from hevy_api.models.request import (
     GetRoutineRequest,
     GetRoutinesRequest,
     GetWorkoutRequest,
     GetWorkoutsCountRequest,
     GetWorkoutsRequest,
+    PostRoutineRequest,
+    PostWorkoutRequest,
+    PutRoutineRequest,
+    PutWorkoutRequest,
 )
 from hevy_api.models.response import (
     RoutineResponse,
@@ -52,6 +57,7 @@ class HTTPClient:
                 method=request.get_method(),
                 url=url,
                 headers=headers,
+                json=request.get_body(),
             )
 
             # Try to parse JSON, fallback to text
@@ -144,6 +150,24 @@ class HevyClient:
 
         return workout_response
 
+    def update_workout(self, workout_id: str, workout: Workout) -> WorkoutResponse:
+        request = PutWorkoutRequest(workout_id, workout)
+        response = self.http_client.execute(request)
+        return WorkoutResponse(
+            data=response.data,
+            status_code=response.status_code,
+            headers=response.headers,
+        )
+
+    def create_workout(self, workout: Workout) -> WorkoutResponse:
+        request = PostWorkoutRequest(workout)
+        response = self.http_client.execute(request)
+        return WorkoutResponse(
+            data=response.data,
+            status_code=response.status_code,
+            headers=response.headers,
+        )
+
     def get_workouts(
         self, page_number: int = 1, page_size: int = 5
     ) -> WorkoutsResponse:
@@ -192,6 +216,24 @@ class HevyClient:
             self._cache[routine_id] = routine_response
 
         return routine_response
+
+    def update_routine(self, routine_id: str, routine: Routine) -> RoutineResponse:
+        request = PutRoutineRequest(routine_id, routine)
+        response = self.http_client.execute(request)
+        return RoutineResponse(
+            data=response.data,
+            status_code=response.status_code,
+            headers=response.headers,
+        )
+
+    def create_routine(self, routine: Routine) -> RoutineResponse:
+        request = PostRoutineRequest(routine)
+        response = self.http_client.execute(request)
+        return RoutineResponse(
+            data=response.data,
+            status_code=response.status_code,
+            headers=response.headers,
+        )
 
     def get_routines(
         self, page_number: int = 1, page_size: int = 5

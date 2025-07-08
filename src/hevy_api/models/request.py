@@ -1,6 +1,7 @@
 from typing import Any
 
 from hevy_api.models.base import BaseRequest
+from hevy_api.models.model import Routine, Workout
 
 
 class GetWorkoutsCountRequest(BaseRequest):
@@ -39,6 +40,37 @@ class GetWorkoutRequest(BaseRequest):
         return "GET"
 
 
+class PutWorkoutRequest(BaseRequest):
+    def __init__(self, workout_id: str, workout: Workout, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.workout = workout
+        self.workout_id = workout_id
+
+    def get_endpoint(self) -> str:
+        return f"/v1/workouts/{self.workout_id}"
+
+    def get_method(self) -> str:
+        return "PUT"
+
+    def get_body(self) -> dict[str, Any]:
+        return self.workout.model_dump()
+
+
+class PostWorkoutRequest(BaseRequest):
+    def __init__(self, workout: Workout, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.workout = workout
+
+    def get_endpoint(self) -> str:
+        return "/v1/workouts"
+
+    def get_method(self) -> str:
+        return "POST"
+
+    def get_body(self) -> dict[str, Any]:
+        return self.workout.model_dump()
+
+
 class GetRoutinesRequest(BaseRequest):
     def __init__(self, page_number: int, page_size: int, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -62,3 +94,34 @@ class GetRoutineRequest(BaseRequest):
 
     def get_method(self) -> str:
         return "GET"
+
+
+class PutRoutineRequest(BaseRequest):
+    def __init__(self, routine_id: str, routine: Routine, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.routine = routine
+        self.routine_id = routine_id
+
+    def get_endpoint(self) -> str:
+        return f"/v1/routines/{self.routine_id}"
+
+    def get_method(self) -> str:
+        return "PUT"
+
+    def get_body(self) -> dict[str, Any]:
+        return self.routine.model_dump()
+
+
+class PostRoutineRequest(BaseRequest):
+    def __init__(self, routine: Routine, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.routine = routine
+
+    def get_endpoint(self) -> str:
+        return "/v1/routines"
+
+    def get_method(self) -> str:
+        return "POST"
+
+    def get_body(self) -> dict[str, Any]:
+        return self.routine.model_dump()

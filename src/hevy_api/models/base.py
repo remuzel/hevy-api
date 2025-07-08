@@ -14,6 +14,9 @@ class BaseRequest(ABC):
     def get_method(self) -> str:
         pass
 
+    def get_body(self) -> dict[str, Any]:
+        return {}
+
 
 class BaseResponse:
     def __init__(self, data: Any, status_code: int, headers: dict[str, str]):
